@@ -37,9 +37,17 @@ class AnswerListCreateView(generics.ListCreateAPIView):
         if content_param is not None:
             self.queryset = self.queryset.filter(content__icontains=content_param)
 
-        username_param = self.request.query_params.get('author', None)
+        username_param = self.request.query_params.get('username', None)
         if username_param is not None:
-            self.queryset = self.queryset.filter(author__username=username_param)
+            self.queryset = self.queryset.filter(
+                author__username=username_param
+            )
+
+        is_staff_param = self.request.query_params.get('is_staff')
+        if is_staff_param is not None:
+            self.queryset = self.queryset.filter(
+                author__is_staff=is_staff_param
+            )
 
         return self.queryset
 
