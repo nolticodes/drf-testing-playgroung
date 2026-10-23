@@ -30,6 +30,19 @@ class AnswerListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def get_queryset(self):
+        self.queryset = Answer.objects.all()
+
+        content_param = self.request.query_params.get('content', None)
+        if content_param is not None:
+            self.queryset = self.queryset.filter(content__icontains=content_param)
+
+        username_param = self.request.query_params.get('author', None)
+        if username_param is not None:
+            self.queryset = self.queryset.filter(author__username=username_param)
+
+        return self.queryset
+
 class AnswerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
