@@ -1,4 +1,8 @@
 from rest_framework import viewsets, generics, permissions
+from rest_framework import filters
+
+from django_filters.rest_framework import DjangoFilterBackend
+
 from forum_app.models import Like, Question, Answer
 from .serializers import QuestionSerializer, AnswerSerializer, LikeSerializer
 from .permissions import IsOwnerOrAdmin, CustomQuestionPermission
@@ -26,30 +30,35 @@ class AnswerListCreateView(generics.ListCreateAPIView):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    # bei django filter wird immer der gane zb String erwartet, wenn nach einem Wort der in content vorkommt gesucht eird, dann wird nicht ausgegeben
+    filterset_fields = ['author__username']
+    search_fields = ['content']
+    ordering_fields = ['username', 'email']
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def get_queryset(self):
-        self.queryset = Answer.objects.all()
+    # def get_queryset(self):
+    #     self.queryset = Answer.objects.all()
 
-        content_param = self.request.query_params.get('content', None)
-        if content_param is not None:
-            self.queryset = self.queryset.filter(content__icontains=content_param)
+    #     content_param = self.request.query_params.get('content', None)
+    #     if content_param is not None:
+    #         self.queryset = self.queryset.filter(content__icontains=content_param)
 
-        username_param = self.request.query_params.get('username', None)
-        if username_param is not None:
-            self.queryset = self.queryset.filter(
-                author__username=username_param
-            )
+    #     username_param = self.request.query_params.get('username', None)
+    #     if username_param is not None:
+    #         self.queryset = self.queryset.filter(
+    #             author__username=username_param
+    #         )
 
-        is_staff_param = self.request.query_params.get('is_staff')
-        if is_staff_param is not None:
-            self.queryset = self.queryset.filter(
-                author__is_staff=is_staff_param
-            )
+    #     is_staff_param = self.request.query_params.get('is_staff')
+    #     if is_staff_param is not None:
+    #         self.queryset = self.queryset.filter(
+    #             author__is_staff=is_staff_param
+    #         )
 
-        return self.queryset
+    #     return self.queryset
 
 class AnswerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Answer.objects.all()
