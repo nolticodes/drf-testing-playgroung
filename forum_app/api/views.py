@@ -1,5 +1,6 @@
 from rest_framework import viewsets, generics, permissions
 from rest_framework import filters
+from rest_framework.pagination import PageNumberPagination
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -30,11 +31,12 @@ class AnswerListCreateView(generics.ListCreateAPIView):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     # bei django filter wird immer der gane zb String erwartet, wenn nach einem Wort der in content vorkommt gesucht eird, dann wird nicht ausgegeben
     filterset_fields = ['author__username']
     search_fields = ['content']
-    ordering_fields = ['username', 'email']
+    ordering_fields = ['content', 'author__username']
+    ordering = ['content']  # Default Wert, in Postman kann mit key "ordering" nach anderen field geordert werden
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -65,11 +67,18 @@ class AnswerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AnswerSerializer
     permission_classes = [IsOwnerOrAdmin]
 
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class LikeViewSet(viewsets.ModelViewSet):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
     permission_classes = [IsOwnerOrAdmin]
+    pagination_class = LargeResultsSetPagination
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
