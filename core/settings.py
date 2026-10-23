@@ -145,6 +145,7 @@ REST_FRAMEWORK = {
         'anon': '100/day',
         'user': '1000/day',
         'question': '15/day',
+        'question-get': '10/day',
         'question-post': '2/day',
         'question-patch': '2/day',
         'question-put': '2/day',

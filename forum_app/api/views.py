@@ -2,7 +2,7 @@ from rest_framework import viewsets, generics, permissions
 from forum_app.models import Like, Question, Answer
 from .serializers import QuestionSerializer, AnswerSerializer, LikeSerializer
 from .permissions import IsOwnerOrAdmin, CustomQuestionPermission
-from .throttling import QuestionThrottle
+from .throttling import QuestionThrottle, QuestionGetThrottling, QuestionPostThrottling
 
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -12,6 +12,15 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def get_throttles(self):
+        if self.action == 'list':
+            return [QuestionGetThrottling]
+
+        if self.action == 'create':
+            return [QuestionPostThrottling]
+
+        return []
 
 class AnswerListCreateView(generics.ListCreateAPIView):
     queryset = Answer.objects.all()
